@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <title>JavaScript Vanilla : Horloge</title>
+    <style>
+      :root {
+        --secondcolor:#000000;
+        --minutecolor:#000000;
+        --hourcolor:#000000;
+      }
+      html {
+        background: #018DED url(https://unsplash.it/1500/1000?image=881&blur=5);
+        background-size: cover;
+        text-align: center;
+        font-size: 10px;
+      }
+      body {
+        margin: 0;
+        font-size: 2rem;
+        display: flex;
+        flex: 1;
+        min-height: 100vh;
+        align-items: center;
+      }
+      .selecteurs {
+        margin:1rem;
+        padding:1rem;
+        color:white;
+        text-align: left;
+      }
+      .selecteur {
+        margin-bottom: 1rem;
+      }
+      .selecteur:last-child {
+        margin:0;
+      }
+      .selecteurs input {
+        margin-left:2rem;
+        float:right;
+      }
+      .horloge {
+        width: 30rem;
+        height: 30rem;
+        border: 20px solid white;
+        border-radius: 50%;
+        margin: 50px auto;
+        position: relative;
+        padding: 2rem;
+        background: #fff url(ios_clock.svg) no-repeat center;
+        background-size:90%;
+        box-shadow:
+        0 0 0 4px rgba(0,0,0,0.1),
+        inset 0 0 0 3px #EFEFEF,
+        inset 0 0 10px black,
+        0 0 10px rgba(0,0,0,0.2);
+      }
+      .horloge:after {
+        background: #000;
+        border-radius: 50%;
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 5%;
+        height: 5%;
+        z-index: 10;
+      }
+      .horloge-main {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transform: translateY(-3px); /* Correction pour la hauteur des aiguilles */
+      }
+      .aiguille {
+        width: 50%;
+        height: 6px;
+        background: black;
+        position: absolute;
+        top: 50%;
+        transform-origin: 100%;
+        transform: rotate(90deg);
+        transition: all 0.12s;
+        transition-timing-function: cubic-bezier(0.49, 2.35, 0.88, 0);
+      }
+      .aiguille-Heure {
+        width:25%;
+        margin-left:25%;
+        border-radius:3px;
+        background:var(--hourcolor);
+      }
+      .aiguille-Minute {
+        width:45%;
+        margin-left:5%;
+        border-radius:3px;
+        background:var(--minutecolor);
+      }
+      .aiguille-Seconde {
+        height:3px;
+        border-radius:2px;
+        background:var(--secondcolor);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="selecteurs">
+      <div class="selecteur selec-Heure">
+        <label for="hourcolor">Couleur Heures</label>
+        <input id="hourcolor" type="color" name="hourcolor" value="#000000">
+      </div>
+      <div class="selecteur selec-Minute">
+        <label for="minutecolor">Couleur Minutes</label>
+        <input id="minutecolor" type="color" name="minutecolor" value="#000000">
+      </div>
+      <div class="selecteur selec-Secondes">
+        <label for="secondcolor">Couleur Secondes</label>
+        <input id="secondcolor" type="color" name="secondcolor" value="#000000">
+      </div>
+    </div>
+    <div class="horloge">
+      <div class="horloge-main">
+        <div class="aiguille aiguille-Heure"></div>
+        <div class="aiguille aiguille-Minute"></div>
+        <div class="aiguille aiguille-Seconde"></div>
+      </div>
+      <audio data-key="clic-Secondes" src="clic.wav"></audio>
+      <audio data-key="clic-Heures" src="hour.wav"></audio>
+    </div>
+    <script>
+      const aiguilleHeure = document.querySelector(".aiguille-Heure");
+      const aiguilleMinute = document.querySelector(".aiguille-Minute");
+      const aiguilleSeconde = document.querySelector(".aiguille-Seconde");
+      let previousHeure = -1, previousMinute = -1;
+      let rotationHeure = 90, rotationMinute = 90, rotationSeconde = 90;
+      let setR = 0, setG = 0, setB = 0;
+      function setDate() {
+        const maintenant = new Date();
+        const heures = maintenant.getHours();
+        const minutes = maintenant.getMinutes();
+        const secondes = maintenant.getSeconds();
+        if(previousHeure === -1 || previousMinute === -1) {
+          previousHeure = heures;
+          previousMinute = minutes;
+          rotationHeure += heures * 30;
+          rotationMinute += minutes * 6;
+          rotationSeconde += (secondes * 6) - 6;
+        }
+        if(previousHeure !== heures) {
+          rotationHeure += 30;
+          previousHeure = heures;
+        }
+        if(previousMinute !== minutes) {
+          rotationMinute += 6;
+          previousMinute = minutes;
+        }
+        rotationSeconde += 6;
+
+        if(secondes >= 0 && secondes <= 19) {
+          setR = 255 - (secondes * (255 / 20));
+          setG = setB = 0;
+        } else if(secondes >= 20 && secondes <= 39) {
+          setG = 255 - ((secondes - 20) * (255 / 20));
+          setR = setB = 0;
+        } else {
+          setB = 255 - ((secondes - 40) * (255 / 20));
+          setR = setG = 0;
+        }
+        document.documentElement.style.setProperty(`--backgroundcolor`, `rgb(${setR},${setG},${setB})`);
+
+
+        aiguilleHeure.style.transform = `rotate(${rotationHeure}deg)`;
+        aiguilleMinute.style.transform = `rotate(${rotationMinute}deg)`;
+        aiguilleSeconde.style.transform = `rotate(${rotationSeconde}deg)`;
+
+        const audioSeconde = document.querySelector(`audio[data-key="clic-Secondes"]`);
+        audioSeconde.currentTime = 0;
+        audioSeconde.play();
+        const audioHeures = document.querySelector(`audio[data-key="clic-Heures"]`);
+        if(minutes === 0 && secondes === 0) {
+          audioHeures.play();
+        }
+      }
+      setInterval(setDate, 1000);
+      const couleursInputs = document.querySelectorAll(".selecteurs input")
+      function updateColor() {
+        document.documentElement.style.setProperty(`--${this.name}`, this.value);
+      }
+      couleursInputs.forEach(couleursInputs => couleursInputs.addEventListener('change', updateColor));
+      couleursInputs.forEach(couleursInputs => couleursInputs.addEventListener('mousemove', updateColor));
+    </script>
+  </body>
+</html>
